@@ -41,6 +41,18 @@ footer a {
   justify-content: space-around;
 }
 
+@media screen and (max-width: 500px) {
+  .converter>div {
+    flex-direction: column;
+    height: 111px;
+  }
+  
+  input[type="number"] {
+    width: 41%;
+    min-width: 190px;
+  }
+}
+
 .converter .select-container {
   position: relative;
 }
@@ -91,7 +103,11 @@ input {
   transform: scale(1.5, 1);
   color: #423f3f;
 }
-
+#first-currency-holder img,
+#second-currency-holder img{
+  width: 22px;
+  margin: 2px 7px 0;
+}
 .converter ul.options {
   max-height: 249px;
   overflow-y: scroll;
@@ -119,6 +135,7 @@ input {
   margin: 12px 0;
   border-bottom: 1px solid #ccc;
   padding-bottom: 7px;
+  cursor: pointer;
 }
 
 .converter li img {
