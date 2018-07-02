@@ -1,5 +1,7 @@
+var ratesForUsd;
 addEventListener('load', () => {
   populateCurrenciesLists()
+  getAllRates()
 })
 addEventListener('DOMContentLoaded', () => {
   const firstAmount = document.getElementById('first-amount') //input amount to convert
@@ -30,6 +32,34 @@ addEventListener('DOMContentLoaded', () => {
     renderMatches(this.value, secondCurrenciesList)
   })
 
+  //convert values of input 1
+  firstAmount.addEventListener('input', convertInputOne)
+
+  //convert values of input 2
+  secondAmount.addEventListener('input', convertInputTwo)
+
+
+  function convertInputOne() {
+    const firstCurrency = ratesForUsd[`USD_${firstCurrencyHolder.dataset.id}`]
+    const secondCurrency = ratesForUsd[`USD_${secondCurrencyHolder.dataset.id}`]
+    
+    if ((!firstCurrency || !secondCurrency) && this.value) {    
+      alert("please choose a currency") 
+      return
+    }
+    //1 USD == x curr1 and 1 USD == y curr2 ==> x curr1 == y curr2
+    secondAmount.value = ((secondCurrency / firstCurrency) * +firstAmount.value).toFixed(2)
+  }
+  function convertInputTwo() {
+    const firstCurrency = ratesForUsd[`USD_${secondCurrencyHolder.dataset.id}`]
+    const secondCurrency = ratesForUsd[`USD_${firstCurrencyHolder.dataset.id}`]
+    
+    if (!firstCurrency || !secondCurrency) {
+      return
+    }
+    //1 USD == x curr1 and 1 USD == y curr2 ==> x curr1 == y curr2
+    firstAmount.value = ((secondCurrency/ firstCurrency) * +secondAmount.value).toFixed(2)
+  }
   //hide lists when clicked outside of them
   document.addEventListener('click', (event) => {
     if (event.target.closest('.select-container')) return //ignore when clicked inside a select box
@@ -49,6 +79,21 @@ addEventListener('DOMContentLoaded', () => {
     this.classList.add('hide') //hide the div that holds the current currency
     this.nextElementSibling.classList.add('show') //show the list
   }
+
+  function listClicked(event) {
+    if (event.target.nodeName === 'UL') return //cliked item isn't a list
+    event.stopPropagation()
+    const currencyHolder = this.previousElementSibling
+    currencyHolder.dataset.id = event.target.closest('li').dataset.id
+  
+    renderElement(currencyHolder, event.target.closest('li').innerHTML, false)
+  
+    if (event.target.closest('.first')) convertInputOne()
+    if (event.target.closest('.second')) convertInputTwo()
+  
+    currencyHolder.classList.remove('hide')
+    this.classList.remove('show')
+  }
 })
 
 function renderElement(node, content, isInput) {
@@ -58,17 +103,6 @@ function renderElement(node, content, isInput) {
   }
 
 }
-
-function listClicked(event) {
-  if (event.target.nodeName === 'UL') return //cliked item isn't a list
-  event.stopPropagation()
-  const currencyHolder = this.previousElementSibling
-  renderElement(currencyHolder, event.target.closest('li').innerHTML, false)
-  currencyHolder.classList.remove('hide')
-  this.classList.remove('show')
-}
-
-
 
 async function getCurrenciesList() {
   const blob = await fetch('https://free.currencyconverterapi.com/api/v5/currencies')
@@ -83,13 +117,14 @@ function populateCurrenciesLists() {
     Object.values(json.results)
       .sort((a, b) => {
         if (a.currencyName < b.currencyName)
-          return -1;
+          return -1
         if (a.currencyName > b.currencyName)
-          return 1;
-        return 0;
+          return 1
+        return 0
       })
       .forEach(entry => {
         const li = document.createElement('li')
+        li.dataset.id = entry.id
         const img = document.createElement('img')
         img.src = `../images/flags/${entry.id.toLowerCase()}.png`
         const content = document.createTextNode(entry.currencyName)
@@ -117,13 +152,52 @@ async function renderMatches(value, destNode) {
   matches.forEach(entry => {  //render matched results to UL
 
     const li = document.createElement('li')
+    li.dataset.id = entry.id
     const img = document.createElement('img')
     img.src = `../images/flags/${entry.id.toLowerCase()}.png`
     const content = document.createTextNode(entry.currencyName)
     li.appendChild(img)
     li.appendChild(content)
 
-    
+
     destNode.appendChild(li)
   })
+}
+
+
+/* get all rates for USD */
+async function getAllRates() {
+  const currenciesList = await getCurrenciesList()
+  let currenciesId = Object.values(currenciesList.results).map(res => res.id) //extract IDs
+
+  let ratesUsd = {}
+  window.ratesUsd = {}
+  let jsonData = []
+
+  while (currenciesId.length > 0) {
+
+    const maxTwoRates = currenciesId.splice(0, 2)
+    jsonData.push(fetchRate(maxTwoRates)) 
+
+  }
+  const responses = await Promise.all(jsonData).then(async rates => {
+    let results = await Promise.all(rates.map(res => res.json()))
+
+    results.forEach(result => { //populates ratesUsd with rates
+      ratesUsd = {...ratesUsd, ...result}
+    })
+  })
+  ratesForUsd = ratesUsd
+  return ratesUsd
+}
+
+
+
+function fetchRate(currencies=[]) {
+  if (currencies.length == 1) {
+    return fetch(`https://free.currencyconverterapi.com/api/v5/convert?q=USD_${currencies[0]}&compact=ultra`)
+  }
+  else if (currencies.length == 2) {
+    return fetch(`https://free.currencyconverterapi.com/api/v5/convert?q=USD_${currencies[0]},USD_${currencies[1]}&compact=ultra`)
+  }
 }
