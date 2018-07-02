@@ -126,6 +126,7 @@ input {
   transform: scale(1, 0);
   transform-origin: top;
   transition: transform 200ms ease-in;
+  width: 100%;
 }
  .converter ul.options.show {
   transform: scale(1);
