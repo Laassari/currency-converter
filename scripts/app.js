@@ -1,4 +1,6 @@
 var ratesForUsd;
+let dbPromise
+
 addEventListener('load', () => {
   populateCurrenciesLists()
   getAllRates()
@@ -70,6 +72,7 @@ addEventListener('DOMContentLoaded', () => {
   })
 
   function showList(event) {
+    updateRatesVariable()
     event.stopPropagation()
     this.previousElementSibling.focus()
 
@@ -188,6 +191,13 @@ async function getAllRates() {
     })
   })
   ratesForUsd = ratesUsd
+
+  //store (update) the result to indexedD
+  dbPromise.then(db => {
+    const tx = db.transaction('usd', "readwrite")
+    const store = tx.objectStore('usd')
+    store.put(ratesUsd, 'ratesUsd')
+  })
   return ratesUsd
 }
 
@@ -202,9 +212,28 @@ function fetchRate(currencies=[]) {
   }
 }
 
+function updateRatesVariable() {
+  if (typeof ratesForUsd === 'undefined') {//update it from the database
+
+    dbPromise.then(async db => {
+      const tx = db.transaction('usd')
+      const store = tx.objectStore('usd')
+    
+      ratesForUsd =  await store.get('ratesUsd')
+    })
+  }
+}
+
 // Service worker stuff 💪 💪
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('../sw.js')
     .then(_ => console.log('success registeration'))
     .catch(err => console.log(err))
 }
+
+
+// create a database for rates
+dbPromise = idb.open('rates', 1, upgrade => {
+  const store = upgrade.createObjectStore('usd')
+  store.add(undefined, 'ratesUsd')
+})
