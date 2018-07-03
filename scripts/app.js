@@ -129,7 +129,7 @@ function populateCurrenciesLists() {
         const li = document.createElement('li')
         li.dataset.id = entry.id
         const img = document.createElement('img')
-        img.src = `../images/flags/${entry.id.toLowerCase()}.png`
+        img.src = `images/flags/${entry.id.toLowerCase()}.png`
         const content = document.createTextNode(entry.currencyName)
         li.appendChild(img)
         li.appendChild(content)
