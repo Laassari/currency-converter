@@ -201,3 +201,10 @@ function fetchRate(currencies=[]) {
     return fetch(`https://free.currencyconverterapi.com/api/v5/convert?q=USD_${currencies[0]},USD_${currencies[1]}&compact=ultra`)
   }
 }
+
+// Service worker stuff 💪 💪
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('../sw.js')
+    .then(_ => console.log('success registeration'))
+    .catch(err => console.log(err))
+}
