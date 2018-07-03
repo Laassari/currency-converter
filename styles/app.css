@@ -73,9 +73,8 @@ input {
 
 #first-currency-holder,
 #second-currency-holder {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
+  line-height: 13px;
+  overflow-y: auto;
   width: 100%;
   background: white;
   padding: 6px 10px;
