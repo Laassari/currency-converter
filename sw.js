@@ -21,7 +21,7 @@ addEventListener('fetch', event => { //return a copy from the cache or fire a ne
       else {
         return fetch(event.request)
           .then(res => {
-            if (event.request.url.startsWith('https://free.currencyconverterapi.com')) return res //don't cache requests to the API
+            if (event.request.url.startsWith('https://free.currencyconverterapi.com/api/v5/convert')) return res //don't cache requests to the API
             return caches.open(cacheName)
               .then(cache => {
                 cache.put(event.request.url, res.clone()) //save the response for future
